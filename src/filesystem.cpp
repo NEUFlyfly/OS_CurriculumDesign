@@ -211,7 +211,7 @@ bool FileSystem::check(char name[], char passwd[]) {
         fseek(fr, cur_dir_inode.inode_dirblock[i], SEEK_SET);
         fread(&dir_vec, sizeof(dir_vec), 1, fr);
         for(int j = 0; j < 16; j++) {
-            if(strcmp(dir_vec[j].name, "user") == 0 || strcmp(dir_vec->name, "passwd")) {
+            if(strcmp(dir_vec[j].name, "user") == 0 || strcmp(dir_vec[j].name, "passwd") == 0) {
                 iNode helper;
                 fseek(fr, dir_vec[j].inode_addr, SEEK_SET);
                 fread(&helper, sizeof(iNode), 1, fr);
@@ -420,7 +420,7 @@ bool FileSystem::MakeDir(int inode_addr, char *name) {
     else
         filemode = 0;
 
-    if( ((cur.inode_mode >> filemode >> 2) & 1) == 0) {
+    if (strcmp(cur_user_name, "root") != 0 && ((cur.inode_mode >> filemode >> 2) & 1) == 0) {
         cout << "Permission Dennied" << endl;
         return false;
     }
@@ -548,7 +548,7 @@ int FileSystem::INodeAlloc() {
         FILE* fw = image.get_file_write();
         superBlock->s_free_INODE_NUM--;
         fseek(fw, SUPERBLOCK_START_ADDR, SEEK_SET);
-        fwrite(superBlock, sizeof(superBlock), 1, fw);
+        fwrite(superBlock, sizeof(SuperBlock), 1, fw);
         inode_bitmap[pos] = 1;
         fseek(fw, INODEBITMAP_START_ADDR + pos, SEEK_SET);
         fwrite(&inode_bitmap[pos], sizeof(bool), 1, fw);
