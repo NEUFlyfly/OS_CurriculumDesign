@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug FlyflyUFS",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/FlyflyUFS.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [
+        {
+          "name": "PATH",
+          "value": "C:/msys64/ucrt64/bin;${env:PATH}"
+        },
+        {
+          "name": "TERM",
+          "value": "xterm"
+        }
+      ],
+      "externalConsole": true,
+      "MIMode": "gdb",
+      "miDebuggerPath": "C:/msys64/ucrt64/bin/gdb.exe",
+      "preLaunchTask": "Build FlyflyUFS"
+    }
+  ]
+}
