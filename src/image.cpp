@@ -38,6 +38,7 @@ bool Image::InitImage(bool &isFormat) {
             return false;	//打开文件失败
         }
         cout << "Done" << endl;
+        return true;
     }
 }
 
