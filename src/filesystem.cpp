@@ -114,15 +114,21 @@ bool FileSystem::Format() {
     fflush(fw);
 
     //创建目录及配置文件
-    MakeDir(ROOT_DIR_ADDR,"home");	//用户目录
-    FindDir(ROOT_DIR_ADDR,"home");
+    char home_dir[] = "home";
+    char root_dir[] = "root";
+    char etc_dir[] = "etc";
 
-    MakeDir(this->cur_dir_addr,"root");
-    Chmod(this->cur_dir_addr, "root", 0660);
+    if(!MakeDir(ROOT_DIR_ADDR, home_dir)) return false;
+    FindDir(ROOT_DIR_ADDR, home_dir);
 
-    FindDir(cur_dir_addr,"..");
-    MakeDir(cur_dir_addr,"etc");	//配置文件目录
-    FindDir(cur_dir_addr,"etc");
+    int home_dir_addr = this->cur_dir_addr;
+    if(!MakeDir(home_dir_addr, root_dir)) return false;
+    Chmod(home_dir_addr, root_dir, 0660);
+
+    this->cur_dir_addr = ROOT_DIR_ADDR;
+    strcpy(this->cur_dir_name, "/");
+    if(!MakeDir(ROOT_DIR_ADDR, etc_dir)) return false;
+    FindDir(ROOT_DIR_ADDR, etc_dir);
 
     char buf[1000] = {0};
 
@@ -139,7 +145,8 @@ bool FileSystem::Format() {
     sprintf(buf+strlen(buf),"user::1:\n");	//增加普通用户组，组内用户列表为空
     Create(cur_dir_addr,"group",buf);	//创建用户组信息文件
 
-    FindDir(cur_dir_addr,"..");	//回到根目录
+    this->cur_dir_addr = ROOT_DIR_ADDR;
+    strcpy(this->cur_dir_name, "/");
 
     return true;
 }
@@ -415,6 +422,7 @@ bool FileSystem::MakeDir(int inode_addr, char *name) {
 
     if( ((cur.inode_mode >> filemode >> 2) & 1) == 0) {
         cout << "Permission Dennied" << endl;
+        return false;
     }
 
     int i = 0;

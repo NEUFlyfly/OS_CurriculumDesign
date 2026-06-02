@@ -19,7 +19,11 @@ static void ConfigureConsoleEncoding() {
 
 int main() {
     ConfigureConsoleEncoding();
+#ifdef _WIN32
+    system("cls");
+#else
     system("clear");
+#endif
     Image image;
     bool isFormat = false;
     image.InitImage(isFormat);
@@ -54,7 +58,9 @@ int main() {
         fileSystem.ReadCommand(str);
     }
     fclose(image.get_file_write());
-    fclose(image.get_file_read());
+    if(image.get_file_read() != image.get_file_write()) {
+        fclose(image.get_file_read());
+    }
     cout << "登出" << endl;
     return 0;
 }
