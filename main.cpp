@@ -1,13 +1,24 @@
 #include <iostream>
 #include <cstring>
 #include <cstdio>
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include "image.h"
 #include "filesystem.h"
 #include "editor.h"
 
 using namespace std;
 
+static void ConfigureConsoleEncoding() {
+#ifdef _WIN32
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
+}
+
 int main() {
+    ConfigureConsoleEncoding();
     system("clear");
     Image image;
     bool isFormat = false;
