@@ -10,6 +10,8 @@
 #include "superblock.h"
 #include "dir.h"
 #include "editor.h"
+#include "filesystem_storage.h"
+#include "filesystem_state.h"
 
 
 class FileSystem {
@@ -24,17 +26,8 @@ public:
 
     bool is_login;
 private:
-    Image& image;
-    SuperBlock* superBlock;
-    bool inode_bitmap[INODE_NUM];
-    bool block_bitmap[BLOCK_NUM];
-    int cur_dir_addr;                           //当前目录
-    int nextUID;								//下一个要分配的用户标识号
-    int nextGID;								//下一个要分配的用户组标识号
-    char cur_user_name[MAX_NAME_SIZE];          //当前登陆用户名
-    char cur_grop_name[MAX_NAME_SIZE];          //当前用户组名
-    char cur_dir_name[MAX_NAME_SIZE];           //当前目录名
-    char cur_user_dir_name[MAX_NAME_SIZE];      //当前登陆用户目录名
+    FileSystemStorage storage;
+    FileSystemState state;
 
     void readFirst(int addr);
 
