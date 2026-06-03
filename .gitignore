@@ -1,6 +1,0 @@
-.idea/
-cmake-build-debug/
-build/
-build-*/
-data.img
-.DS_Store
