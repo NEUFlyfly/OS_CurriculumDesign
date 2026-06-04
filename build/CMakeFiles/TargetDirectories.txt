@@ -1,0 +1,3 @@
+D:/code/OS_CurriculumDesign/build/CMakeFiles/FlyflyUFS.dir
+D:/code/OS_CurriculumDesign/build/CMakeFiles/edit_cache.dir
+D:/code/OS_CurriculumDesign/build/CMakeFiles/rebuild_cache.dir
