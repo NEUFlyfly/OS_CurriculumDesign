@@ -19,7 +19,7 @@ static void ConfigureConsoleEncoding() {
 
 int main() {
     ConfigureConsoleEncoding();
-    system("clear");
+    system("cls");
     Image image;
     bool isFormat = false;
     image.InitImage(isFormat);
@@ -53,8 +53,7 @@ int main() {
         cin.getline(str, 100);
         fileSystem.ReadCommand(str);
     }
-    fclose(image.get_file_write());
-    fclose(image.get_file_read());
+    fclose(image.get_file_write());  // _file_read 指向同一句柄，无需重复关闭
     cout << "登出" << endl;
     return 0;
 }
