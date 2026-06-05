@@ -6,6 +6,8 @@
 #include <cstdio>
 #include "filesystem.h"
 
+/// @brief 
+/// @return 
 bool FileSystem::Format() {
     //初始化超级块
     storage.superBlock->s_INODE_NUM = INODE_NUM;
@@ -29,14 +31,16 @@ bool FileSystem::Format() {
 
     memset(storage.inode_bitmap,0,sizeof(storage.inode_bitmap));
     fseek(storage.image.get_file_write(), INODEBITMAP_START_ADDR, SEEK_SET);
-    fwrite(storage.inode_bitmap,sizeof(storage.inode_bitmap),1, fw);
+    fwrite(storage.inode_bitmap,sizeof(storage.inode_bitmap),1, fw); // 持久化inode位图
 
-    memset(storage.block_bitmap,0,sizeof(storage.block_bitmap));
+    memset(storage.block_bitmap,0,sizeof(storage.block_bitmap)); // 初始并持久化block位图
     fseek(fw,BLOCKBIITMAP_START_ADDR,SEEK_SET);
     fwrite(storage.block_bitmap,sizeof(storage.block_bitmap),1, fw);
 
     //初始化磁盘块区，根据成组链接法组织
-    for(int i = BLOCK_NUM/BLOCKS_PER_GROUP-1; i>=0; i--){	//一共INODE_NUM/BLOCKS_PER_GROUP组，一组FREESTACKNUM（128）个磁盘块 ，第一个磁盘块作为索引
+    //一共INODE_NUM/BLOCKS_PER_GROUP组，一组FREESTACKNUM（128）个磁盘块 ，第一个磁盘块作为索引
+    for(int i = BLOCK_NUM/BLOCKS_PER_GROUP-1; i>=0; i--){	
+        
         if(i == BLOCK_NUM/BLOCKS_PER_GROUP-1)
             //最后一组 下面一组没有空闲盘块
             storage.superBlock->s_free[0] = -1;
@@ -112,7 +116,7 @@ bool FileSystem::Format() {
 
     int home_dir_addr = this->state.cur_dir_addr;
     if(!MakeDir(home_dir_addr, root_dir)) return false;
-    Chmod(home_dir_addr, root_dir, 0660);
+    Chmod(home_dir_addr, root_dir, 0660); //修改权限，禁止其它用户读取该文件
 
     this->state.cur_dir_addr = ROOT_DIR_ADDR;
     strcpy(this->state.cur_dir_name, "/");

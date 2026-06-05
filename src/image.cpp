@@ -32,7 +32,9 @@ bool Image::InitImage(bool &isFormat) {
         this->_file_read = this->_file_write;   // 使用单句柄，避免 Windows 双句柄缓冲不一致
         cout << "Done" << endl;
         isFormat = true;
-    } else {
+    } 
+    else 
+    {
         this->_file_write = fopen(IMAGEFILENAME, "rb+");	// 读写打开虚拟磁盘文件
         if(this->_file_write== nullptr){
             printf("虚拟磁盘文件打开失败\n");

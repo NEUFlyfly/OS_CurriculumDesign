@@ -32,13 +32,14 @@ bool FileSystem::MakeDir(int inode_addr, char *name) {
         return false;
     }
 
-    int i = 0;
     int find_pos_i = -1, find_pos_j = -1;
     // 160 -> 10 直接 * 16 = 160 个目录项
-    while(i < 160) {
-        int dir_in_block = i / 16;
+    for(int dir_in_block = 0; dir_in_block < 10; dir_in_block++) {
         if(cur.inode_dirblock[dir_in_block] == -1) {
-            i += 16;
+            if(find_pos_i == -1) {
+                find_pos_i = dir_in_block;
+                find_pos_j = 0;
+            }
             continue;
         }
 
@@ -48,13 +49,8 @@ bool FileSystem::MakeDir(int inode_addr, char *name) {
 
         for(int j = 0; j < 16; j++) {
             if(strcmp(dir_vec[j].name, name) == 0) {
-                iNode helper;
-                fseek(fr, dir_vec[j].inode_addr, SEEK_SET);
-                fread(&helper, sizeof(iNode), 1, fr);
-                if ((( helper.inode_mode >> 9) & 1 )) {
-                    cout << "目录已存在" << endl;
-                    return false;
-                }
+                cout << "目录项已存在" << endl;
+                return false;
             } else {
                 if(strcmp(dir_vec[j].name, "") == 0) {
                     if(find_pos_i == -1) {
@@ -64,16 +60,27 @@ bool FileSystem::MakeDir(int inode_addr, char *name) {
                 }
             }
         }
-        i++;
     }
 
     //找到空闲位置
     if(find_pos_i != -1){
 
-        //取出这个直接块，要加入的目录条目的位置
-        fseek(fr, cur.inode_dirblock[find_pos_i], SEEK_SET);
-        fread(dir_vec, sizeof(dir_vec), 1, fr);
-        fflush(fr);
+        bool needs_new_parent_block = cur.inode_dirblock[find_pos_i] == -1;
+        if(needs_new_parent_block) {
+            int parent_block_addr = BlockAlloc();
+            if(parent_block_addr == -1) {
+                printf("block分配失败\n");
+                return false;
+            }
+            cur.inode_dirblock[find_pos_i] = parent_block_addr;
+            memset(dir_vec, 0, sizeof(dir_vec));
+        }
+        else {
+            //取出这个直接块，要加入的目录条目的位置
+            fseek(fr, cur.inode_dirblock[find_pos_i], SEEK_SET);
+            fread(dir_vec, sizeof(dir_vec), 1, fr);
+            fflush(fr);
+        }
 
         //创建这个目录项
         strcpy(dir_vec[find_pos_j].name, name);	//目录名

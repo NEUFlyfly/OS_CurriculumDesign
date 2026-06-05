@@ -7,7 +7,7 @@
 #include <cstdio>
 #include "filesystem.h"
 
-void FileSystem::DelFile(int addr, char *param) {
+void FileSystem:: DelFile(int addr, char *param) {
     if(strlen(param) >= MAX_NAME_SIZE){
         cout << "超过最长文件名" << endl;
         return ;

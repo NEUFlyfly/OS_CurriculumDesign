@@ -7,16 +7,34 @@
 #include <cstdio>
 #include "filesystem.h"
 
+/*
+ * 在指定目录 inode 下查找并进入某个子目录。
+ *
+ * 参数：
+ *   inode_addr：起始目录的 inode 地址，通常是当前目录或根目录的 inode 地址。
+ *   name：要查找的目录名，例如 "home"、".."、"."。
+ *
+ * 核心逻辑：
+ *   1. 根据 inode_addr 读取父目录 inode。
+ *   2. 遍历该目录 inode 的 10 个直接数据块 inode_dirblock[]。
+ *   3. 每个目录数据块保存 16 个 Dir 目录项，因此最多扫描 10 * 16 = 160 个目录项。
+ *   4. 在目录项中查找名字等于 name 的项。
+ *   5. 找到后，根据目录项中的 inode_addr 读取目标 inode。
+ *   6. 如果目标 inode 是目录，则检查当前用户是否有进入权限；如果不是目录，则继续查找。
+ *   7. 权限检查通过后，更新当前目录状态：
+ *      - state.cur_dir_addr 改为目标目录 inode 地址；
+ *      - state.cur_dir_name 根据 "."、".." 或普通目录名进行更新。
+ *
+ * 注意：
+ *   这个函数不只是“查找目录”，它找到目录后会直接改变当前工作目录状态，
+ *   相当于 shell 中 cd 命令背后的核心路径切换逻辑。
+ */
 void FileSystem::FindDir(int inode_addr, const char *name) {
     iNode cur;
     FILE* fr = storage.image.get_file_read();
     fseek(fr, inode_addr, SEEK_SET);
-    fread(&cur, sizeof(iNode), 1, fr);
+    fread(&cur, sizeof(iNode), 1, fr); // 读出inode
     int filemode;
-
-
-
-
     int i = 0;
     while(i < 160){
         Dir dir_vec[16] = {0};
@@ -67,7 +85,7 @@ void FileSystem::FindDir(int inode_addr, const char *name) {
                         for(k = strlen(state.cur_dir_name); k>=0; k--)
                              if(state.cur_dir_name[k]=='/')
                                 break;
-                        state.cur_dir_name[k]='\0';
+                        state.cur_dir_name[k]='\0'; // 从后往前截断
                         if(strlen(state.cur_dir_name)==0) {
                             //根目录
                             state.cur_dir_name[0] = '/'; state.cur_dir_name[1] = '\0';

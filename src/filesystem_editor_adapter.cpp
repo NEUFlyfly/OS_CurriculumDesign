@@ -8,11 +8,8 @@
 #include <fstream>
 #include "filesystem.h"
 
-void FileSystem::editor(int cur_dir_addr, char file_name[], char buf[])
+void FileSystem::editor(int cur_dir_addr, char file_name[], char buf[], int buf_size)
 {
-    memset(buf, 0, sizeof(buf));
-
-
     auto fr = storage.image.get_file_read();
 
     if (strlen(file_name) >= MAX_NAME_SIZE) {
@@ -21,8 +18,7 @@ void FileSystem::editor(int cur_dir_addr, char file_name[], char buf[])
     }
 
     //清空缓冲区
-    memset(buf, 0, sizeof(buf));
-    buf[0] = '\0';
+    memset(buf, 0, buf_size);
     int maxlen = 0;	//到达过的最大长度
 
     //查找有无同名文件，有的话进入编辑模式，没有进入创建文件模式

@@ -21,14 +21,14 @@ bool FileSystem::Create(int father_inode_addr, const char *name, char *file_cont
     fseek(fr, father_inode_addr, SEEK_SET);
     fread(&cur, sizeof(iNode), 1, fr);
 
-    int i = 0;
     int find_pos_i = -1, find_pos_j = -1;
-    int dir_block_num;
-    while(i < 160){
-        dir_block_num = i/16;
+    for(int dir_block_num = 0; dir_block_num < 10; dir_block_num++){
 
         if(cur.inode_dirblock[dir_block_num]==-1){
-            i += 16;
+            if(find_pos_i == -1) {
+                find_pos_i = dir_block_num;
+                find_pos_j = 0;
+            }
             continue;
         }
         fseek(fr, cur.inode_dirblock[dir_block_num], SEEK_SET);
@@ -44,25 +44,31 @@ bool FileSystem::Create(int father_inode_addr, const char *name, char *file_cont
                 find_pos_j = j;
             }
             else if(strcmp(dir_vec[j].name, name)==0 ){
-                //重名，取出inode，判断是否是文件
-                iNode helper;
-                fseek(fr, dir_vec[j].inode_addr, SEEK_SET);
-                fread(&helper, sizeof(iNode), 1, fr);
-                if( ((helper.inode_mode>>9) &1)==0 ){	//是文件且重名，不能创建文件
-                    cout << "文件已经存在" << endl;
-                    file_content[0] = '\0';
-                    return false;
-                }
+                //同一目录下文件和目录共用命名空间，任何重名项都不能创建。
+                cout << "文件已经存在" << endl;
+                file_content[0] = '\0';
+                return false;
             }
-            i++;
         }
 
     }
     if(find_pos_i != -1){
-        //取出之前那个空闲目录项对应的磁盘块
-        fseek(fr, cur.inode_dirblock[find_pos_i], SEEK_SET);
-        fread(dir_vec, sizeof(dir_vec), 1, fr);
-        fflush(fr);
+        bool needs_new_parent_block = cur.inode_dirblock[find_pos_i] == -1;
+        if(needs_new_parent_block) {
+            int parent_block_addr = BlockAlloc();
+            if(parent_block_addr == -1){
+                cout << "Block分配失败" << endl;
+                return false;
+            }
+            cur.inode_dirblock[find_pos_i] = parent_block_addr;
+            memset(dir_vec, 0, sizeof(dir_vec));
+        }
+        else {
+            //取出之前那个空闲目录项对应的磁盘块
+            fseek(fr, cur.inode_dirblock[find_pos_i], SEEK_SET);
+            fread(dir_vec, sizeof(dir_vec), 1, fr);
+            fflush(fr);
+        }
 
         //创建这个目录项
         strcpy(dir_vec[find_pos_j].name, name);

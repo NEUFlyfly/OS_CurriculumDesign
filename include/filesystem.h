@@ -58,7 +58,7 @@ private:
     void DeleteUserContent(char buffer[], char *username);
 
     // Shell/editor adapters
-    void editor(int cur_dir_addr, char file_name[], char buf[]);
+    void editor(int cur_dir_addr, char file_name[], char buf[], int buf_size);
     void Help();
 };
 

@@ -22,17 +22,18 @@ void FileSystem::ReadCommand(char *command) {
     }
     else if(strcmp(param_first,"mkdir")==0){
         sscanf(command, "%s%s", param_first, param_second);
-        MakeDir(state.cur_dir_addr, param_second);
-        Chmod(state.cur_dir_addr, param_second, 0660);
+        if(MakeDir(state.cur_dir_addr, param_second)) {
+            Chmod(state.cur_dir_addr, param_second, 0660);
+        }
     }
     else if(strcmp(param_first, "rmdir")==0){
         sscanf(command, "%s%s", param_first, param_second);
         DeleteDir(state.cur_dir_addr, param_second);
     }
     else if(strcmp(param_first, "nano")==0){	//创建一个文件
-        char* buffer = new char[255];
+        char editor_buffer[FILE_BUFFER];
         sscanf(command, "%s%s", param_first, param_second);
-        editor(state.cur_dir_addr, param_second, buffer);	//读取内容到buf
+        editor(state.cur_dir_addr, param_second, editor_buffer, FILE_BUFFER);	//读取内容到buf
     }
     else if(strcmp(param_first, "touch")==0){
         sscanf(command, "%s%s", param_first, param_second);
@@ -43,7 +44,7 @@ void FileSystem::ReadCommand(char *command) {
         DelFile(state.cur_dir_addr, param_second);
     }
     else if(strcmp(param_first, "clear") == 0){
-        system("clear");
+        system("cls");
     }
     else if(strcmp(param_first, "exit") == 0){
         Quit();

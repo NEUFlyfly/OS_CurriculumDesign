@@ -24,7 +24,7 @@ public:
     void set_filename(const string &_filename) {
         Image::_filename = _filename;
     }
-
+    // 返回操作这个文件的地址
     FILE *get_file_read() const {
         return _file_read;
     }

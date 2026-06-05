@@ -99,7 +99,7 @@ bool FileSystem::check(char name[], char passwd[]) {
             fread(buffer, storage.superBlock->s_BLOCK_SIZE, 1, fr);
             block_pointer = 0;
         }
-        user[i] = buffer[block_pointer++];
+        user[i] = buffer[block_pointer++]; // passwd文件内容存到user里，复用变量，但其实不太好
     }
     user[i] = '\0';
 

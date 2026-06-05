@@ -42,7 +42,7 @@ void FileSystem::readFirst(int addr) {
 
     //依次取出磁盘块
     int i = 0;
-    while(i < cnt && i<160){
+    while(i < cnt && i<160){ // 仅需检查前已经连接到了的目录项，超过部分不输出
         Dir dir_vec[16] = {0};
         if(cur.inode_dirblock[i/16]==-1){
             i+=16;
@@ -105,7 +105,7 @@ void FileSystem::readFirst(int addr) {
 }
 
 void FileSystem::ShowDir(int addr) {
-    readFirst(addr);
+    // readFirst(addr);
     FILE* fr = storage.image.get_file_read();
     FILE* fw = storage.image.get_file_write();
     iNode cur;
