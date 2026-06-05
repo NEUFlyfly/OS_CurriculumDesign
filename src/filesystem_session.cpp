@@ -71,11 +71,19 @@ bool FileSystem::check(char name[], char passwd[]) {
         }
     }
 
-    char user[100000];
+    char user[10000];
     char buffer[600]; //存磁盘快内容
     int block_pointer = 0;
     int i;
-    for(i = 0; i < user_inode.inode_size; i++) {
+
+    // Safety check: if user or passwd file not found, fail immediately
+    if (user_inode_addr == -1 || passwd_inode_addr == -1) {
+        cout << "用户配置文件缺失" << endl;
+        FindDir(state.cur_dir_addr, "..");
+        return false;
+    }
+
+    for(i = 0; i < user_inode.inode_size && i < 9999; i++) {
         if(i % storage.superBlock->s_BLOCK_SIZE == 0) {
             //需要用新的磁盘块
             fseek(fr, user_inode.inode_dirblock[i/(storage.superBlock->s_BLOCK_SIZE)], SEEK_SET);
@@ -92,7 +100,7 @@ bool FileSystem::check(char name[], char passwd[]) {
     }
 
     block_pointer = 0;
-    for(i = 0; i < passwd_inode.inode_size; i++) {
+    for(i = 0; i < passwd_inode.inode_size && i < 9999; i++) {
         if(i % storage.superBlock->s_BLOCK_SIZE == 0) {
             //需要用新的磁盘块
             fseek(fr, passwd_inode.inode_dirblock[i/(storage.superBlock->s_BLOCK_SIZE)], SEEK_SET);

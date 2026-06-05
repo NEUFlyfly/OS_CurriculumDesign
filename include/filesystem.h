@@ -25,6 +25,7 @@ public:
     void ReadCommand(char string[]);
 
     bool is_login;
+    friend class FileSystemAdapter;
 private:
     FileSystemStorage storage;
     FileSystemState state;

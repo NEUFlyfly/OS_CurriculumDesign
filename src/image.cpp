@@ -27,7 +27,7 @@ bool Image::InitImage(bool &isFormat) {
             cout << "Error" << endl;
             exit(-1);
         }
-        fclose(_file_write);    // Windows: 关闭只写句柄，重新以 rb+ 打开
+        fclose(created_file);    // 关闭创建句柄
         this->_file_write = fopen(IMAGEFILENAME, "rb+");
         this->_file_read = this->_file_write;   // 使用单句柄，避免 Windows 双句柄缓冲不一致
         cout << "Done" << endl;

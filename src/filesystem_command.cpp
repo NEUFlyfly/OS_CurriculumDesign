@@ -11,7 +11,7 @@ void FileSystem::ReadCommand(char *command) {
     char param_first[100];
     char param_second[100];
     char params_third[100];
-    char buffer[100000];	//最大100K
+    char buffer[10000];
     sscanf(command,"%s", param_first);
     if(strcmp(param_first, "ls")==0){
         ShowDir(state.cur_dir_addr);

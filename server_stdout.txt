@@ -1,0 +1,5 @@
+Init image file ...Done
+Done
+Formating System...Done
+Installing FileSystem... Done
+WebSocket server listening on port 9001
