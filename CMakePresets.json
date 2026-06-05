@@ -22,8 +22,7 @@
       "displayName": "Build FlyflyUFS",
       "configurePreset": "msys2-ucrt64-debug",
       "targets": [
-        "FlyflyUFS",
-        "FlyflyUFS-server"
+        "FlyflyUFS"
       ]
     }
   ]
