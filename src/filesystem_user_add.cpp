@@ -143,7 +143,7 @@ void FileSystem::AddUser(char *username) {
             break;
     }
 
-    char file_content[100000];
+    char file_content[10000];
     char buffer[600];
 
 

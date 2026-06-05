@@ -29,6 +29,7 @@ bfile.txt
 # IDE and editor local files
 .idea/
 .vs/
+.vscode/
 *.swp
 *.swo
 *.tmp

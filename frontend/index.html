@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fly文件系统</title>
+
+  <!-- Tailwind CSS CDN (utility supplements) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            accent: '#0078D4',
+            'accent-hover': '#106EBE',
+            'accent-light': '#E8F4FD',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Custom Design System -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <style>
+    /* Tailwind overrides - let our design system take priority */
+    /* Tailwind is available for quick utility classes, but all primary styling
+       uses our custom CSS variables defined in styles.css */
+  </style>
+</head>
+<body>
+  <!-- =================================================================== -->
+  <!-- App Shell Layout                                                    -->
+  <!-- =================================================================== -->
+  <div id="app">
+    <!-- Title Bar -->
+    <div id="titlebar">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="1" width="14" height="14" rx="2" fill="#0078D4"/>
+        <path d="M4 8l2.5 2.5L11 5.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="window-title">Fly文件系统</span>
+      <div class="window-controls">
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div id="toolbar"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar"></div>
+
+    <!-- Content Area -->
+    <div id="content-area"></div>
+
+    <!-- Status Bar -->
+    <div id="statusbar"></div>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- Scripts (dependency order is critical)                              -->
+  <!-- =================================================================== -->
+
+  <!-- 1. Utilities (no dependencies) -->
+  <script src="js/utils/icons.js"></script>
+  <script src="js/utils/helpers.js"></script>
+
+  <!-- 2. API Layer (depends on helpers) -->
+  <script src="js/api.js"></script>
+  <script src="js/ws-client.js"></script>
+
+  <!-- 3. UI Components (depend on utils, api) -->
+  <script src="js/components/toast.js"></script>
+  <script src="js/components/contextmenu.js"></script>
+  <script src="js/components/toolbar.js"></script>
+  <script src="js/components/sidebar.js"></script>
+  <script src="js/components/content.js"></script>
+  <script src="js/components/statusbar.js"></script>
+
+  <!-- 4. Main App (depends on everything above) -->
+  <script src="js/app.js"></script>
+</body>
+</html>
