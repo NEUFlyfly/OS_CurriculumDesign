@@ -35,6 +35,7 @@ private:
     int BlockAlloc();
     bool FreeBlock(int i);
     bool INodeFree(int addr);
+    void RepairBlockBitmapFromInodes();
 
     // Path navigation and directory metadata
     void FindDir(int inode_addr, const char name[]);
@@ -46,7 +47,7 @@ private:
 
     // File creation, data, deletion, and read commands
     bool Create(int father_inode_addr, const char name[], char file_content[]);
-    void MakeFile(int addr, char param[], char buffer[]);
+    bool MakeFile(int addr, char param[], char buffer[]);
     void DelFile(int addr, char param[]);
     void WriteFile(iNode inode, int inode_addr, char buffer[]);
     void Cat(int inode_addr, char name[]);

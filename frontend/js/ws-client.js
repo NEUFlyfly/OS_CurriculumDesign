@@ -178,8 +178,8 @@ const WSClient = (function () {
    * Output format per line:
    *   permissions\tlinks\towner\tgroup\tsize B\tname
    * Example:
-   *   drwxr-xr-x	2	root	root	  512 B	documents
-   *   -rw-r--r--	1	root	root	 2048 B	readme.txt
+   *   drwxr-xr-x	3	root	root	  512 B	home
+   *   drwxr-xr-x	5	root	root	  512 B	etc
    */
   function parseLsOutput(output) {
     if (!output || typeof output !== 'string') return [];
@@ -231,7 +231,7 @@ const WSClient = (function () {
 
   // ── Convenience Methods ───────────────────────────────────────────────────
 
-  async function login(username = 'root', password = 'root') {
+  async function login(username, password) {
     const result = await send('login', { username, password });
     if (result.type === 'response') {
       emit('login', result.data);

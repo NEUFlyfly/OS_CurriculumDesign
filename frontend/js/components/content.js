@@ -21,6 +21,7 @@ const ContentArea = (function () {
   function init(parentEl, cb) {
     container = parentEl;
     callbacks = cb || {};
+    container.addEventListener('contextmenu', handleDelegatedContextMenu, true);
     renderEmpty();
   }
 
@@ -178,21 +179,12 @@ const ContentArea = (function () {
     container.querySelectorAll('.file-item').forEach(el => {
       el.addEventListener('click', (e) => handleItemClick(e, el));
       el.addEventListener('dblclick', (e) => handleItemDblClick(e, el));
-      el.addEventListener('contextmenu', (e) => handleContextMenu(e, el));
     });
 
     // List rows
     container.querySelectorAll('.list-row').forEach(el => {
       el.addEventListener('click', (e) => handleItemClick(e, el));
       el.addEventListener('dblclick', (e) => handleItemDblClick(e, el));
-      el.addEventListener('contextmenu', (e) => handleContextMenu(e, el));
-    });
-
-    // Empty space context menu
-    container.addEventListener('contextmenu', (e) => {
-      if (e.target === container || e.target.classList.contains('content-grid') || e.target.classList.contains('content-list')) {
-        handleEmptySpaceContextMenu(e);
-      }
     });
 
     // Deselect on click outside
@@ -201,6 +193,20 @@ const ContentArea = (function () {
         clearSelection();
       }
     });
+  }
+
+  function handleDelegatedContextMenu(e) {
+    const itemEl = e.target.closest('.file-item, .list-row');
+    if (itemEl && container.contains(itemEl)) {
+      e.stopPropagation();
+      handleContextMenu(e, itemEl);
+      return;
+    }
+
+    if (e.target === container || container.contains(e.target)) {
+      e.stopPropagation();
+      handleEmptySpaceContextMenu(e);
+    }
   }
 
   function handleItemClick(e, el) {
@@ -293,6 +299,15 @@ const ContentArea = (function () {
       ? items.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase())).map(i => i.name)
       : items.map(i => i.name);
     selectedItems = new Set(names);
+    updateSelectionUI();
+    if (callbacks.onSelectionChange) {
+      callbacks.onSelectionChange(Array.from(selectedItems));
+    }
+  }
+
+  function selectOnly(name) {
+    clearSelection();
+    if (name) selectedItems.add(name);
     updateSelectionUI();
     if (callbacks.onSelectionChange) {
       callbacks.onSelectionChange(Array.from(selectedItems));
@@ -477,6 +492,7 @@ const ContentArea = (function () {
     getSelectedItems,
     getSelectedNames,
     selectAll,
+    selectOnly,
     setViewMode,
     setSort,
     startRename,

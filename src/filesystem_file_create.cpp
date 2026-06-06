@@ -145,7 +145,7 @@ bool FileSystem::Create(int father_inode_addr, const char *name, char *file_cont
         return false;
 }
 
-void FileSystem::MakeFile(int addr, char *param, char *buffer) {
+bool FileSystem::MakeFile(int addr, char *param, char *buffer) {
 
 
     FILE* fr = storage.image.get_file_read();
@@ -166,7 +166,7 @@ void FileSystem::MakeFile(int addr, char *param, char *buffer) {
 
     if( ((cur.inode_mode >> filemode >> 2) & 1) == 0) {
         cout << "Permission Dennied" << endl;
-        return ;
+        return false;
     }
 
 
@@ -191,7 +191,7 @@ void FileSystem::MakeFile(int addr, char *param, char *buffer) {
                 fread(&create_file_inode, sizeof(iNode), 1, fr);
                 if( ((create_file_inode.inode_mode >> 9) & 1) == 0){
                     cout << "该文件已经存在" << endl;
-                    return ;
+                    return false;
                 }
             }
             i++;
@@ -202,10 +202,10 @@ void FileSystem::MakeFile(int addr, char *param, char *buffer) {
     if( ((cur.inode_mode >> filemode >> 1) & 1) == 1){
         //可写。可以创建文件
         buffer[0] = '\0';
-        Create(addr, param, buffer);	//创建文件
+        return Create(addr, param, buffer);	//创建文件
     }
     else{
         cout << "Permission Dennied" << endl;
-        return ;
+        return false;
     }
 }

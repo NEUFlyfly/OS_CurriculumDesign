@@ -3,6 +3,7 @@
 
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+#include <atomic>
 #include <map>
 #include <mutex>
 #include <string>
@@ -35,6 +36,7 @@ private:
     FileSystemAdapter& m_adapter;
     WsServer m_server;
     std::mutex m_mutex;
+    std::atomic<bool> m_shutdownRequested;
 
     typedef std::map<connection_hdl, WsSession,
                      std::owner_less<connection_hdl>> SessionMap;

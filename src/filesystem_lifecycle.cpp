@@ -158,5 +158,84 @@ bool FileSystem::InitFileSystem() {
     //读取block位图
     fseek(fr,BLOCKBIITMAP_START_ADDR,SEEK_SET);
     fread(storage.block_bitmap,sizeof(storage.block_bitmap),1,fr);
+    RepairBlockBitmapFromInodes();
     return true;
+}
+
+void FileSystem::RepairBlockBitmapFromInodes() {
+    bool rebuilt_bitmap[BLOCK_NUM];
+    memset(rebuilt_bitmap, 0, sizeof(rebuilt_bitmap));
+
+    unsigned int used_blocks = 0;
+    const unsigned int total_blocks = storage.superBlock->s_BLOCK_NUM < BLOCK_NUM
+        ? storage.superBlock->s_BLOCK_NUM
+        : BLOCK_NUM;
+
+    auto mark_block = [&](int addr) {
+        if (addr < BLOCK_STARTADDR) return;
+        if ((addr - BLOCK_STARTADDR) % storage.superBlock->s_BLOCK_SIZE != 0) return;
+
+        unsigned int block_id = static_cast<unsigned int>((addr - BLOCK_STARTADDR) / storage.superBlock->s_BLOCK_SIZE);
+        if (block_id >= total_blocks) return;
+
+        if (!rebuilt_bitmap[block_id]) {
+            rebuilt_bitmap[block_id] = true;
+            used_blocks++;
+        }
+    };
+
+    FILE* fr = storage.image.get_file_read();
+    FILE* fw = storage.image.get_file_write();
+
+    const unsigned int total_inodes = storage.superBlock->s_INODE_NUM < INODE_NUM
+        ? storage.superBlock->s_INODE_NUM
+        : INODE_NUM;
+
+    for (unsigned int i = 0; i < total_inodes; ++i) {
+        if (!storage.inode_bitmap[i]) continue;
+
+        iNode inode;
+        const int inode_addr = INODE_START_ADDR + static_cast<int>(i * storage.superBlock->s_INODE_SIZE);
+        fseek(fr, inode_addr, SEEK_SET);
+        if (fread(&inode, sizeof(iNode), 1, fr) != 1) continue;
+
+        for (int block_index = 0; block_index < 10; ++block_index) {
+            mark_block(inode.inode_dirblock[block_index]);
+        }
+
+        if (inode.inode_indirect_block_first >= BLOCK_STARTADDR) {
+            mark_block(inode.inode_indirect_block_first);
+
+            int indirect_blocks[BLOCK_SIZE / sizeof(int)] = {0};
+            fseek(fr, inode.inode_indirect_block_first, SEEK_SET);
+            if (fread(indirect_blocks, sizeof(indirect_blocks), 1, fr) == 1) {
+                for (unsigned int j = 0; j < BLOCK_SIZE / sizeof(int); ++j) {
+                    mark_block(indirect_blocks[j]);
+                }
+            }
+        }
+    }
+
+    bool changed = false;
+    for (unsigned int i = 0; i < total_blocks; ++i) {
+        if (storage.block_bitmap[i] != rebuilt_bitmap[i]) {
+            changed = true;
+            storage.block_bitmap[i] = rebuilt_bitmap[i];
+        }
+    }
+
+    const unsigned int free_blocks = total_blocks - used_blocks;
+    if (storage.superBlock->s_free_BLOCK_NUM != free_blocks) {
+        changed = true;
+        storage.superBlock->s_free_BLOCK_NUM = free_blocks;
+    }
+
+    if (!changed) return;
+
+    fseek(fw, BLOCKBIITMAP_START_ADDR, SEEK_SET);
+    fwrite(storage.block_bitmap, sizeof(storage.block_bitmap), 1, fw);
+
+    fseek(fw, SUPERBLOCK_START_ADDR, SEEK_SET);
+    fwrite(storage.superBlock, sizeof(SuperBlock), 1, fw);
+    fflush(fw);
 }

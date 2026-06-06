@@ -121,105 +121,17 @@ const MockAPI = (function () {
     const root = makeDir('/', 'root', 'root', '0755');
     fsTree['/'] = root;
 
-    // ── /documents ──
-    const docs = makeDir('documents');
-    root.children.set('documents', docs);
-    docs.children.set('readme.txt', makeFile('readme.txt', 2048,
-      'FlyflyUFS - A Unix-like File System Simulator\n\n' +
-      'This is a custom file system built for OS curriculum design.\n' +
-      'Features:\n' +
-      '- Inode-based file storage\n' +
-      '- Unix permissions (rwx)\n' +
-      '- Directory hierarchy\n' +
-      '- Block allocation bitmap\n' +
-      '- WebSocket remote access\n'));
-    docs.children.set('project_plan.md', makeFile('project_plan.md', 1536,
-      '# Project Plan\n\n' +
-      '## Phase 1: Core File System\n- Superblock initialization\n- Inode management\n- Block allocation\n\n' +
-      '## Phase 2: WebSocket Server\n- Protocol design\n- Command handling\n\n' +
-      '## Phase 3: Frontend\n- Explorer UI\n- Real-time updates\n'));
-    docs.children.set('notes.txt', makeFile('notes.txt', 512, 'TODO: Implement symlink support\nTODO: Add journal for crash recovery\n'));
-    docs.children.set('api_reference.md', makeFile('api_reference.md', 3072,
-      '# API Reference\n\n' +
-      '## Commands\n- ls: List directory\n- cd: Change directory\n- mkdir: Create directory\n' +
-      '- touch: Create file\n- rm: Remove file\n- rmdir: Remove directory\n- cat: Read file\n' +
-      '- chmod: Change permissions\n- pwd: Current path\n- disk_usage: Storage stats\n'));
+    const home = makeDir('home', 'root', 'root', '0755');
+    root.children.set('home', home);
 
-    // ── /documents/reports (nested) ──
-    const reports = makeDir('reports');
-    docs.children.set('reports', reports);
-    reports.children.set('q1_summary.pdf', makeFile('q1_summary.pdf', 524288, ''));
-    reports.children.set('q2_summary.pdf', makeFile('q2_summary.pdf', 438272, ''));
-    reports.children.set('annual_report.docx', makeFile('annual_report.docx', 102400, ''));
+    const rootHome = makeDir('root', 'root', 'root', '0660');
+    home.children.set('root', rootHome);
 
-    // ── /images ──
-    const images = makeDir('images', 'root', 'root', '0755');
-    root.children.set('images', images);
-    images.children.set('screenshot_001.png', makeFile('screenshot_001.png', 245760, ''));
-    images.children.set('screenshot_002.png', makeFile('screenshot_002.png', 198656, ''));
-    images.children.set('logo.svg', makeFile('logo.svg', 4096,
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">\n' +
-      '  <circle cx="50" cy="50" r="45" fill="#0078D4"/>\n' +
-      '  <text x="50" y="60" text-anchor="middle" fill="white" font-size="24">FS</text>\n' +
-      '</svg>'));
-    images.children.set('banner.jpg', makeFile('banner.jpg', 819200, ''));
-    images.children.set('icon.ico', makeFile('icon.ico', 32768, ''));
-
-    // ── /images/wallpapers (nested) ──
-    const wallpapers = makeDir('wallpapers');
-    images.children.set('wallpapers', wallpapers);
-    wallpapers.children.set('mountain.jpg', makeFile('mountain.jpg', 1048576, ''));
-    wallpapers.children.set('ocean.jpg', makeFile('ocean.jpg', 884736, ''));
-    wallpapers.children.set('forest.png', makeFile('forest.png', 768000, ''));
-
-    // ── /src ──
-    const src = makeDir('src', 'root', 'root', '0755');
-    root.children.set('src', src);
-    src.children.set('main.cpp', makeFile('main.cpp', 8192,
-      '#include <iostream>\n#include "filesystem.h"\n\n' +
-      'int main() {\n    std::cout << "FlyflyUFS v1.0" << std::endl;\n    return 0;\n}\n'));
-    src.children.set('filesystem.cpp', makeFile('filesystem.cpp', 16384,
-      '#include "filesystem.h"\n\n// Core filesystem implementation\n'));
-    src.children.set('inode.cpp', makeFile('inode.cpp', 12288, ''));
-    src.children.set('Makefile', makeFile('Makefile', 1024,
-      'CXX = g++\nCXXFLAGS = -std=c++17 -Wall\nTARGET = flyflyufs\n\n' +
-      'all: $(TARGET)\n\n$(TARGET): main.o filesystem.o inode.o\n\t$(CXX) -o $@ $^\n\nclean:\n\trm -f *.o $(TARGET)\n'));
-    src.children.set('config.json', makeFile('config.json', 512,
-      '{\n  "host": "localhost",\n  "port": 9002,\n  "max_connections": 10\n}\n'));
-
-    // ── /src/utils (nested) ──
-    const utilsDir = makeDir('utils');
-    src.children.set('utils', utilsDir);
-    utilsDir.children.set('logger.cpp', makeFile('logger.cpp', 4096, ''));
-    utilsDir.children.set('logger.h', makeFile('logger.h', 2048, ''));
-    utilsDir.children.set('helpers.cpp', makeFile('helpers.cpp', 6144, ''));
-
-    // ── /music ──
-    const music = makeDir('music', 'root', 'root', '0755');
-    root.children.set('music', music);
-    music.children.set('track01.mp3', makeFile('track01.mp3', 5242880, ''));
-    music.children.set('track02.mp3', makeFile('track02.mp3', 4718592, ''));
-    music.children.set('playlist.m3u', makeFile('playlist.m3u', 256,
-      'track01.mp3\ntrack02.mp3\n'));
-
-    // ── /videos ──
-    const videos = makeDir('videos', 'root', 'root', '0755');
-    root.children.set('videos', videos);
-    videos.children.set('demo.mp4', makeFile('demo.mp4', 52428800, ''));
-    videos.children.set('tutorial.mkv', makeFile('tutorial.mkv', 104857600, ''));
-
-    // ── /downloads ──
-    const downloads = makeDir('downloads', 'root', 'root', '0755');
-    root.children.set('downloads', downloads);
-    downloads.children.set('archive.zip', makeFile('archive.zip', 2097152, ''));
-    downloads.children.set('setup.exe', makeFile('setup.exe', 15728640, ''));
-
-    // ── Root-level files ──
-    root.children.set('.bashrc', makeFile('.bashrc', 1024,
-      'export PATH=$HOME/bin:$PATH\nalias ll="ls -la"\nalias ..="cd .."\n'));
-    root.children.set('.gitconfig', makeFile('.gitconfig', 512,
-      '[user]\n  name = root\n  email = root@flyflyufs.local\n'));
-    root.children.set('hello.txt', makeFile('hello.txt', 128, 'Welcome to FlyflyUFS!\n'));
+    const etc = makeDir('etc', 'root', 'root', '0755');
+    root.children.set('etc', etc);
+    etc.children.set('user', makeFile('user', 11, 'root:x:0:0\n', 'root', 'root', '0664'));
+    etc.children.set('passwd', makeFile('passwd', 10, 'root:root\n', 'root', 'root', '0660'));
+    etc.children.set('group', makeFile('group', 22, 'root::0:root\nuser::1:\n', 'root', 'root', '0664'));
   }
 
   // Initialize
@@ -229,7 +141,9 @@ const MockAPI = (function () {
 
   function handleLogin(params) {
     const { username, password } = params;
-    // Accept any credentials in mock mode
+    if (!username || !password) return error('Username and password cannot be empty', 1002);
+
+    // Mock mode accepts non-empty credentials only.
     loggedIn = true;
     currentUser = { username, group: username === 'root' ? 'root' : 'users' };
     return { username: currentUser.username, group: currentUser.group };

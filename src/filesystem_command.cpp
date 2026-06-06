@@ -37,7 +37,7 @@ void FileSystem::ReadCommand(char *command) {
     }
     else if(strcmp(param_first, "touch")==0){
         sscanf(command, "%s%s", param_first, param_second);
-        MakeFile(state.cur_dir_addr, param_second, buffer);	//读取内容到buf
+        (void)MakeFile(state.cur_dir_addr, param_second, buffer);	//读取内容到buf
     }
     else if(strcmp(param_first, "rm")==0){	//删除一个文件
         sscanf(command, "%s%s" , param_first, param_second);

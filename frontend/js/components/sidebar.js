@@ -15,10 +15,15 @@ const Sidebar = (function () {
   // ── Quick Access Items ────────────────────────────────────────────────────
 
   const quickAccess = [
-    { id: 'desktop',    label: 'Desktop',    icon: Icons.desktop,    path: '/' },
-    { id: 'documents',  label: 'Documents',  icon: Icons.documents,  path: '/documents' },
-    { id: 'downloads',  label: 'Downloads',  icon: Icons.downloads,  path: '/downloads' },
-    { id: 'pictures',   label: 'Pictures',   icon: Icons.pictures,   path: '/images' },
+    { id: 'root', label: '根目录 /', icon: Icons.folder, path: '/' },
+    { id: 'terminal', label: '终端', icon: Icons.terminal, action: 'terminal' },
+    { id: 'whole-disk', label: '整盘块布局', icon: Icons.storage, action: 'storage-whole-disk' },
+    { id: 'metadata-layout', label: '元数据区详情', icon: Icons.storage, action: 'storage-metadata-layout' },
+    { id: 'disk-blocks', label: '磁盘块情况', icon: Icons.storage, action: 'storage-disk-blocks' },
+    { id: 'inode-table', label: 'inode 表', icon: Icons.storage, action: 'storage-inode-table' },
+    { id: 'inode-bitmap', label: 'inode 位图', icon: Icons.storage, action: 'storage-inode-bitmap' },
+    { id: 'block-bitmap', label: 'block 位图', icon: Icons.storage, action: 'storage-block-bitmap' },
+    { id: 'grouped-linking', label: '成组链接法', icon: Icons.storage, action: 'storage-grouped-linking' },
   ];
 
   // ── Initialization ────────────────────────────────────────────────────────
@@ -39,24 +44,24 @@ const Sidebar = (function () {
 
     quickAccess.forEach(item => {
       const div = createSidebarItem(item.label, item.icon, false);
-      div.dataset.path = item.path;
+      if (item.path) div.dataset.path = item.path;
+      if (item.action) div.dataset.action = item.action;
       div.addEventListener('click', () => {
+        if (item.action) {
+          setActivePath(item.action);
+          if (item.action === 'terminal' && callbacks.onTerminal) {
+            callbacks.onTerminal();
+          } else if (item.action.startsWith('storage-') && callbacks.onStorageView) {
+            callbacks.onStorageView(item.action);
+          }
+          return;
+        }
         navigateTo(item.path);
       });
       qaSection.appendChild(div);
     });
 
     container.appendChild(qaSection);
-
-    // This PC Section (tree root)
-    const pcSection = document.createElement('div');
-    pcSection.className = 'sidebar-section';
-    pcSection.innerHTML = '<div class="sidebar-section-header">This PC</div>';
-
-    const rootItem = createTreeItem('/', 'Fly文件系统 (C:)', true);
-    pcSection.appendChild(rootItem);
-
-    container.appendChild(pcSection);
   }
 
   // ── Sidebar Item Creator ──────────────────────────────────────────────────
@@ -206,6 +211,8 @@ const Sidebar = (function () {
         item.classList.toggle('active', node.dataset.path === path);
       } else if (item.dataset.path) {
         item.classList.toggle('active', item.dataset.path === path);
+      } else if (item.dataset.action) {
+        item.classList.toggle('active', item.dataset.action === path);
       }
     });
   }
