@@ -1,7 +1,3 @@
-//
-// Created by 林智超 on 2019-06-16.
-//
-
 #ifndef UNIXFILESYSTEM_CONST_H
 #define UNIXFILESYSTEM_CONST_H
 

@@ -1,7 +1,3 @@
-//
-// Created by 林智超 on 2019-06-17.
-//
-
 #include <iostream>
 #include <cstring>
 #include <cstdio>
@@ -13,7 +9,6 @@ void FileSystem::Chmod(int father_inode_addr, const char *name, int mode) {
         cout << "usage: chmod [filename] [permissions] : Change the file permissions" << endl;
         return ;
     }
-
     FILE* fr = storage.image.get_file_read();
     FILE* fw = storage.image.get_file_write();
     iNode cur, res;

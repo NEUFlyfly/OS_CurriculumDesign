@@ -45,6 +45,7 @@ const App = (function () {
     Sidebar.init(document.getElementById('sidebar'), {
       onNavigate: navigateToPath,
       onTerminal: showTerminalView,
+      onPerformanceView: showPerformanceView,
       onStorageView: showStorageView,
     });
 
@@ -67,6 +68,9 @@ const App = (function () {
     StorageView.init(document.getElementById('content-area'), {
       fetchSnapshot: fetchStorageSnapshot,
       fetchGroupedStack: fetchGroupedLinkingStack,
+    });
+    PerformanceView.init(document.getElementById('content-area'), {
+      fetchStats: fetchPerformanceStats,
     });
     bindShutdownButton();
     bindContentContextMenuFallback();
@@ -93,6 +97,35 @@ const App = (function () {
     Toolbar.setAddress(storageViewTitle(viewKey));
     StatusBar.update({ folderCount: 0, fileCount: 0, selectedCount: 0 });
     StorageView.show(viewKey);
+  }
+
+  function showPerformanceView() {
+    currentView = 'performance';
+    Sidebar.setActivePath('performance');
+    Toolbar.setAddress('性能监控');
+    StatusBar.update({ folderCount: 0, fileCount: 0, selectedCount: 0 });
+    PerformanceView.show();
+  }
+
+  async function fetchPerformanceStats() {
+    if (!isLoggedIn || !api) {
+      throw new Error('请先登录');
+    }
+
+    const backendResult = await api.send('performance_stats', {});
+    if (backendResult.type === 'error') {
+      throw new Error(backendResult.message || '读取性能数据失败');
+    }
+    if (backendResult.data && backendResult.data.error) {
+      throw new Error(backendResult.data.error);
+    }
+
+    return {
+      backend: backendResult.data || {},
+      client: typeof api.getClientPerformanceStats === 'function'
+        ? api.getClientPerformanceStats()
+        : null,
+    };
   }
 
   async function fetchStorageSnapshot() {
@@ -340,7 +373,7 @@ const App = (function () {
     if (result.type === 'error') return result.message || 'cd failed';
 
     const nextPath = result.data && result.data.path ? result.data.path : path;
-    await loadDirectory(nextPath, true, false);
+    await loadDirectory(nextPath, true, false, { skipCd: true });
     Terminal.updatePrompt();
     return currentPath;
   }
@@ -757,20 +790,22 @@ const App = (function () {
 
   // ── Directory Operations ──────────────────────────────────────────────────
 
-  async function loadDirectory(path, addToHistory = true, showFiles = true) {
+  async function loadDirectory(path, addToHistory = true, showFiles = true, options = {}) {
     try {
       if (showFiles) currentView = 'files';
 
-      // Navigate to the path (use api.cd() which handles parameter format)
-      const cdResult = await api.cd(path);
-      if (cdResult.type === 'error') {
-        Toast.error(cdResult.message || 'Cannot access directory');
-        return;
-      }
+      if (!options.skipCd) {
+        const cdResult = await api.cd(path);
+        if (cdResult.type === 'error') {
+          Toast.error(cdResult.message || 'Cannot access directory');
+          return;
+        }
 
-      // Update current path from cd response
-      if (cdResult.type === 'response' && cdResult.data && cdResult.data.path) {
-        currentPath = cdResult.data.path;
+        if (cdResult.type === 'response' && cdResult.data && cdResult.data.path) {
+          currentPath = cdResult.data.path;
+        } else {
+          currentPath = path;
+        }
       } else {
         currentPath = path;
       }
@@ -820,6 +855,12 @@ const App = (function () {
   }
 
   function refreshCurrent() {
+    if (currentView === 'performance') {
+      PerformanceView.refresh();
+      Toast.info('Refreshed');
+      return;
+    }
+
     if (isStorageView(currentView)) {
       StorageView.refresh();
       Toast.info('Refreshed');

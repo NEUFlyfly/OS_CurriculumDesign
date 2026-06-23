@@ -12,6 +12,7 @@ const WSClient = (function () {
   const WS_URL = 'ws://127.0.0.1:9001/ws';
   const RECONNECT_DELAY = 2000;
   const MAX_RECONNECT_ATTEMPTS = 3;
+  const PERFORMANCE_RECORD_LIMIT = 50;
 
   // ── State ─────────────────────────────────────────────────────────────────
 
@@ -20,8 +21,11 @@ const WSClient = (function () {
   let reconnectAttempts = 0;
   let reconnectTimer = null;
   let requestId = 0;
-  let pendingRequests = new Map();  // id -> { resolve, reject, timer }
+  let pendingRequests = new Map();  // id -> { resolve, reject, timer, command, startedAt }
   let eventListeners = {};
+  let recentClientTimings = [];
+  let clientAggregates = {};
+  let clientSlowest = null;
 
   // ── Event Emitter ─────────────────────────────────────────────────────────
 
@@ -134,6 +138,12 @@ const WSClient = (function () {
         pendingRequests.delete(id);
         pendingRequests.delete(Number(id));
         pendingRequests.delete(String(id));
+        const roundTripMs = getNow() - pending.startedAt;
+        message.clientTiming = {
+          command: pending.command,
+          roundTripMs,
+        };
+        recordClientTiming(pending.command, roundTripMs, message.status || message.type || 'unknown');
         pending.resolve(message);
       }
     }
@@ -147,6 +157,7 @@ const WSClient = (function () {
   function send(command, params = {}, timeout = 30000) {
     const id = ++requestId;
     const request = JSON.stringify({ type: 'request', id, command, params });
+    const startedAt = getNow();
 
     return new Promise((resolve, reject) => {
       if (!connected || !ws || ws.readyState !== WebSocket.OPEN) {
@@ -159,7 +170,7 @@ const WSClient = (function () {
         reject(new Error(`Request timeout: ${command}`));
       }, timeout);
 
-      pendingRequests.set(id, { resolve, reject, timer });
+      pendingRequests.set(id, { resolve, reject, timer, command, startedAt });
 
       try {
         ws.send(request);
@@ -169,6 +180,65 @@ const WSClient = (function () {
         reject(e);
       }
     });
+  }
+
+  function getNow() {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+      return performance.now();
+    }
+    return Date.now();
+  }
+
+  function recordClientTiming(command, roundTripMs, status) {
+    if (command === 'performance_stats') return;
+
+    const record = {
+      command,
+      status,
+      roundTripMs,
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    recentClientTimings.push(record);
+    while (recentClientTimings.length > PERFORMANCE_RECORD_LIMIT) {
+      recentClientTimings.shift();
+    }
+
+    const aggregate = clientAggregates[command] || {
+      count: 0,
+      totalMs: 0,
+      minMs: roundTripMs,
+      maxMs: roundTripMs,
+    };
+    aggregate.count += 1;
+    aggregate.totalMs += roundTripMs;
+    aggregate.minMs = Math.min(aggregate.minMs, roundTripMs);
+    aggregate.maxMs = Math.max(aggregate.maxMs, roundTripMs);
+    clientAggregates[command] = aggregate;
+
+    if (!clientSlowest || roundTripMs > clientSlowest.roundTripMs) {
+      clientSlowest = record;
+    }
+  }
+
+  function getClientPerformanceStats() {
+    const aggregates = {};
+    Object.keys(clientAggregates).forEach(command => {
+      const aggregate = clientAggregates[command];
+      aggregates[command] = {
+        count: aggregate.count,
+        totalMs: aggregate.totalMs,
+        avgMs: aggregate.count > 0 ? aggregate.totalMs / aggregate.count : 0,
+        minMs: aggregate.minMs,
+        maxMs: aggregate.maxMs,
+      };
+    });
+
+    return {
+      recent: recentClientTimings.slice(),
+      aggregates,
+      slowest: clientSlowest,
+      limits: { recent: PERFORMANCE_RECORD_LIMIT },
+    };
   }
 
   // ── Output Parsing ──────────────────────────────────────────────────────
@@ -297,6 +367,7 @@ const WSClient = (function () {
     on,
     isConnected,
     isUsingFallback,
+    getClientPerformanceStats,
   };
 })();
 

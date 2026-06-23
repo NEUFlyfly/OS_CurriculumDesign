@@ -711,6 +711,7 @@ std::string FileSystemAdapter::CopyEntry(const std::string& sourcePath, const st
             return "File name is too long: " + targetName;
         }
 
+        
         int existingAddress = -1;
         iNode existingInode;
         if (findChild(fr, targetDirectoryAddress, targetName, existingAddress, existingInode)) {

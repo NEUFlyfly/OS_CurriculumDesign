@@ -112,13 +112,27 @@ void WebSocketServer::on_message(websocketpp::connection_hdl hdl,
         response["type"] = "response";
         response["id"] = id;
 
+        double backendMs = 0.0;
+        auto start = std::chrono::steady_clock::now();
         try {
             std::string result = handleCommand(command, params);
+            auto end = std::chrono::steady_clock::now();
+            backendMs = std::chrono::duration<double, std::milli>(end - start).count();
             response["status"] = "ok";
             response["data"] = json::parse(result);
         } catch (const std::exception& e) {
+            auto end = std::chrono::steady_clock::now();
+            backendMs = std::chrono::duration<double, std::milli>(end - start).count();
             response["status"] = "error";
             response["message"] = e.what();
+        }
+
+        response["timing"] = {
+            {"command", command},
+            {"backendMs", backendMs}
+        };
+        if (command != "performance_stats") {
+            recordCommandTiming(command, response["status"].get<std::string>(), backendMs);
         }
 
     } catch (const std::exception& e) {
@@ -140,12 +154,89 @@ void WebSocketServer::on_message(websocketpp::connection_hdl hdl,
     }
 }
 
+void WebSocketServer::recordCommandTiming(const std::string& command,
+                                          const std::string& status,
+                                          double backendMs)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    TimingRecord record;
+    record.command = command;
+    record.status = status;
+    record.backendMs = backendMs;
+
+    m_recentTimingRecords.push_back(record);
+    while (m_recentTimingRecords.size() > kTimingRecordLimit) {
+        m_recentTimingRecords.pop_front();
+    }
+
+    TimingAggregate& aggregate = m_timingAggregates[command];
+    if (aggregate.count == 0 || backendMs < aggregate.minMs) {
+        aggregate.minMs = backendMs;
+    }
+    if (aggregate.count == 0 || backendMs > aggregate.maxMs) {
+        aggregate.maxMs = backendMs;
+    }
+    aggregate.count += 1;
+    aggregate.totalMs += backendMs;
+
+    if (!m_hasSlowestTimingRecord || backendMs > m_slowestTimingRecord.backendMs) {
+        m_slowestTimingRecord = record;
+        m_hasSlowestTimingRecord = true;
+    }
+}
+
+std::string WebSocketServer::buildPerformanceStats()
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    json result;
+
+    result["recent"] = json::array();
+    for (const auto& record : m_recentTimingRecords) {
+        result["recent"].push_back({
+            {"command", record.command},
+            {"status", record.status},
+            {"backendMs", record.backendMs}
+        });
+    }
+
+    result["aggregates"] = json::object();
+    for (const auto& pair : m_timingAggregates) {
+        const TimingAggregate& aggregate = pair.second;
+        result["aggregates"][pair.first] = {
+            {"count", aggregate.count},
+            {"totalMs", aggregate.totalMs},
+            {"minMs", aggregate.minMs},
+            {"maxMs", aggregate.maxMs}
+        };
+    }
+
+    if (m_hasSlowestTimingRecord) {
+        result["slowest"] = {
+            {"command", m_slowestTimingRecord.command},
+            {"status", m_slowestTimingRecord.status},
+            {"backendMs", m_slowestTimingRecord.backendMs}
+        };
+    } else {
+        result["slowest"] = nullptr;
+    }
+
+    result["limits"] = {
+        {"recent", kTimingRecordLimit}
+    };
+
+    return result.dump();
+}
+
 std::string WebSocketServer::handleCommand(const std::string& command, const std::string& paramsStr)
 {
     json params = json::parse(paramsStr);
     json result;
 
-    if (command == "login") {
+    if (command == "performance_stats") {
+        return buildPerformanceStats();
+    }
+    else if (command == "login") {
         std::string username = params.value("username", "");
         std::string password = params.value("password", "");
         bool success = m_adapter.Login(username, password);

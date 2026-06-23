@@ -3,5 +3,6 @@
   "cmake.useCMakePresets": "always",
   "C_Cpp.default.compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
   "C_Cpp.default.cppStandard": "c++17",
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  "C_Cpp.errorSquiggles": "disabled"
 }

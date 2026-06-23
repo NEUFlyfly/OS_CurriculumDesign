@@ -1,7 +1,3 @@
-//
-// Created by 林智超 on 2019-06-17.
-//
-
 #include <cstring>
 #include "filesystem.h"
 

@@ -17,6 +17,7 @@ const Sidebar = (function () {
   const quickAccess = [
     { id: 'root', label: '根目录 /', icon: Icons.folder, path: '/' },
     { id: 'terminal', label: '终端', icon: Icons.terminal, action: 'terminal' },
+    { id: 'performance', label: '性能监控', icon: Icons.info, action: 'performance' },
     { id: 'whole-disk', label: '整盘块布局', icon: Icons.storage, action: 'storage-whole-disk' },
     { id: 'metadata-layout', label: '元数据区详情', icon: Icons.storage, action: 'storage-metadata-layout' },
     { id: 'disk-blocks', label: '磁盘块情况', icon: Icons.storage, action: 'storage-disk-blocks' },
@@ -51,6 +52,8 @@ const Sidebar = (function () {
           setActivePath(item.action);
           if (item.action === 'terminal' && callbacks.onTerminal) {
             callbacks.onTerminal();
+          } else if (item.action === 'performance' && callbacks.onPerformanceView) {
+            callbacks.onPerformanceView();
           } else if (item.action.startsWith('storage-') && callbacks.onStorageView) {
             callbacks.onStorageView(item.action);
           }
